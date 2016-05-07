@@ -48,7 +48,11 @@ def change(obj):
 
 send_events = [{'type':'READY','msg':'are you ready?'},{'type':'TERM','msg':'I will close!'},{'type':'CHANGE','port':port}]
 recv_events = [{'type':'READY_ACK','handler':send_question},{'type':'QUES_ACK','handler':send_question},{'type':'TERM_ACK','handler':exit},{'type':'CHANGE_ACK','handler':change}]
-question_list = ['1','2','3','4','5']
+question_list = ['what\'s the strikingly like in your mind?',
+                'Can employees have chance to work abroad?',
+                'what\'s the revenune situation now?',
+                'what\'s the plan in next few years including team expansion, produce, IPO and etc?',
+                'Will the company try a different business field?']
 
 
 with open(mmap_file,'w') as f:

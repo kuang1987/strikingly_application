@@ -125,3 +125,62 @@ I hope I can bring more passion, more enquiry mind and more views.
 4. what's the plan in next few years including team expansion, produce, IPO and etc?
 5. Will the company try a different business field?
 
+
+
+8. db server slow
+step1. check db server hardware including cpu/memory/disk io/network bandwidth/TCP connections. Command 'top'/'iostat'/'free'/'iftop'/'netstat'... will be used.
+1. is there any non-db process having high cpu/memory usage?
+2. compare db process cpu/memory usage with past -- if abnormal, it may need look into db itself.
+3. check whether disk io being abnormal. -- consider disk is almost full or disk hardward issue.
+4. check TCP connections, whether it's from app/api or other origin.  -- consider hack or other mis-access to db
+5. check connections number to port which db used.
+5. check bandwidth. Use 'tcpdump' or 'pcap' to look into the traffic if nessasary.
+....
+
+step2. check db process itself. I just have some experience on mysql.
+1. 'show processlist' to check slow or hang sql.
+2. 'show status like '%connection%'' to see db connection usage.
+    whether exceed max connection.
+    how many connections queued.
+    how many connections error. -- mysql will restrict access from IP when too much error occurs
+    how many connections timeout.
+3. 'show status like '%lock%''. -- may be some sqls lock the row or table leading other transaction hanged
+4. 'show open tables' -- to see how many tables is opening, and how many thread is operating on these table.
+5. if innodb used, use 'show status like 'innodb'
+    buffer pool pages used/blank pages/dirty pages/write request.
+...
+
+step3. check the network enviroment from app/api server to db server.
+1. use 'ping' from app/api server to see ttl time.
+2. use 'traceroute' -- may be some network equipments down or high traffic. It may leads the long response time or route changed.
+...
+
+step4. check applications on app/api server. 
+1. whether app is using some cold sql.
+2. whether the app cache service is running well
+3. check app connection pool component. -- I once met a disgusting bug in java c3p0. 
+... 
+
+step5. If db is in a cluster env, check other members. The LB may lead traffic to 'slow' db server when other members down.
+
+
+9. LXC and virtualization
+To be honest, I have not much experience in this field. I read some materials today, and try my best to give a simple answer.
+The same part for two is to utilize machine hardware resource more efficiently.
+Difference:
+virtualization:
+    lays between hardware and os.
+    Even though in a same host, virtualization can supply virtual machines with different os by means of CPU instruction translation, file system support, memory management and so on.
+
+LXC:
+    Based on cgroup.
+    Seperate resource and namespaceing for a pack of process of appliction.
+    Share same hardware resource and os kernel which makes a little performance loss.
+    Quick startup/shutdown give itself high flexibility.
+
+pros and cons in some scenarios I can think of:
+1. As the situation in my current company, there are projects in both linux and windows. Virtualization may be the better choice.
+2. In order to face the sudden increasing business traffic, LXC may be the better option due to its fast deployment.
+3. Try to think the situation that a serious security vulnerability happened, such as open ssl heart bleeding, simply patching the host's kernel is OK for LXC while we need patch every image for virtual machine.
+
+
