@@ -1,0 +1,127 @@
+﻿1. find files
+find . -type f -exec stat -c '%n %s %Y' '{}' + | awk -vt=`date -d "2016-04-28 00:00:00" +%s` -vs=4000 'BEGIN{}{if($3 > t && $2 > s){print $0}}'
+
+2. kill
+Simply speaking, command kill is used to send a signal to a certain process or a process group. If no signal is specified, the "SIGTERM" will be sent.
+In process, you can set listener for 'SIGTERM' to do some clearance or ensure some significant action done.
+And "kill -9 <pid>" will send 'SIGKILL' signal which will enforce process exit. 
+I will use two python code snippets to illustrate:
+eg.1:
+If we need only one process of some service running in system, usually, we use a lock file or pid file. when process being killed, we should delete lock/pid file.
+If we use 'kill -9' to kill this process, the pid file may not be deleted.
+----code begin----
+import os,sys
+import signal
+from time import sleep
+
+pid_file = __file__ + '.pid'
+
+if os.path.exists(pid_file):
+    with open(pid_file,'r') as f:
+        pid = f.readlines()
+    print 'one process running with pid %s, I will exit'%pid[0]
+    sys.exit(-1)
+else:
+    with open(pid_file,'w') as f:
+        f.write(str(os.getpid()))
+
+def onsignal_term(a,b):
+    delete_pid_file()
+    print 'SIGTERM RECEIVED'
+    sys.exit(0)
+
+signal.signal(signal.SIGTERM,onsignal_term)
+
+def onsignal_int(a,b):
+    delete_pid_file()
+    print 'SIGINT RECEIVED'
+    sys.exit(0)
+
+signal.signal(signal.SIGINT,onsignal_term)
+
+def delete_pid_file():
+    os.remove(pid_file)
+
+while 1:
+    print 'I\'m running'
+    sleep(2)
+----code end----
+
+eg2:
+If we need ensure something done before exiting. At this situation, if use 'kill -9', process will be exit immediately. 
+In real case, may be the web app is still process http request, may be app is writing data into db and etc. 
+----code begin----
+import os
+import signal
+from time import sleep
+
+count = 20
+
+def onsignal_term(a,b):
+    print 'SIGTERM RECEIVED'
+    global i
+    if i < count:
+        print 'I\'m not finished'
+
+signal.signal(signal.SIGTERM,onsignal_term)
+
+i = 0
+while i < count:
+    print 'My pid is',os.getpid()
+    i = i + 1
+    sleep(10)
+----code end----
+
+'kill -9' is very dangerous in some circumstance. Be cautious!
+
+3. nginx or haproxy zero downtime
+For nginx, use 'kill -HUP <master pid>' or 'nginx -s reload'(it does the same thing as former command).
+The nginx's elegant arch ensures zero downtime. when nginx's master process receives SIGHUP signal, it will fork new worker processes which will handle request immediatly after startup with new configuration. Then, 
+the master will send signal to old worker processes to gracefully exit, it's to say, these processes will not acceptin new connection any more, and try to cleanly close existing connection. Once all connections are closed, processes exit.
+
+For haproxy, the 'reload' command will reload configuration within a very tiny connection loss.
+When starting to reload, the script will start a new haproxy process after checking new configuration. The new haproxy will bind connection to all listening ports using 'SO_REUSEPORT'. If binding successfully, new process
+will send singal to old process to gracefully exit. 
+When the old process is closing listening ports, the kernal may not always redistribute pending connections which was remainning in socket's backlog. It will leads SYN packet happend before socket is closed. And then, a RST will be sent back
+to client. It's the 'tiny loss' mentioned above.
+
+
+4. everything is file
+eg1: in xshell, open a terminal, type 'tty' command
+[root@cloudapp1 ipc]# tty
+/dev/pts/6
+open another terminal, then echo some string like operating file.
+[root@cloudapp1 dev]# echo 'hello' > /dev/pts/6
+in the former terminal, 
+[root@cloudapp1 ipc]# hello
+
+eg2:
+[root@cloudapp1 dev]# cat /proc/cpuinfo
+
+eg3: pipe
+[root@cloudapp1 dev]# echo 'hello' | cat
+hello
+
+
+5. monitor tools/services
+zabbix
+some basic metrics -- cpu, memory, disk usage, bandwidth
+For tomcat application server -- jvm memory, reponse time, connection count, queued connections
+For mysql server -- connection, slow_query, inno_db_pool_buffer_size, insert/select/delete/update/commit qos
+For Nginx server -- connection write/wait/read, request count/fail
+
+6. want to join? bring?
+I want:
+1. work with brilliant guys with strong technical background, positive attitude.
+2. international and startup enviroment.
+3. anticipate in a world-wide and esay-to-use product. 
+
+I hope I can bring more passion, more enquiry mind and more views.  
+
+7. five question
+1. what's the strikingly like in your mind?
+2. which do you value more between experience and potentiality?
+3. what's the revenune situation now?
+4. what's the plan in next few years including team expansion, produce, IPO and etc?
+5. Will the company try a different business field?
+
