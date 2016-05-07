@@ -31,8 +31,8 @@ In real case, may be the web app is still process http request, may be app is wr
 1. terminal  
    1. in xshell, open a terminal, type 'tty' command  
    
-   > [root@cloudapp1 ipc]# tty
-   > /dev/pts/6
+   > [root@cloudapp1 ipc]# tty  
+      /dev/pts/6
    
    2. open another terminal, then echo some string like operating file.
    
