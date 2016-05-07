@@ -28,12 +28,15 @@ In real case, may be the web app is still process http request, may be app is wr
 > find . -type f -exec stat -c '%n %s %Y' '{}' + | awk -vt=`date -d "2016-04-28 00:00:00" +%s` -vs=4000 'BEGIN{}{if($3 > t && $2 > s){print $0}}'
 
 ### Elaborate the concept of “everything is a file” in linux with at least 3 examples in different scenarios.
-1. in xshell, open a terminal, type 'tty' command
+1. in xshell, open a terminal, type 'tty' command  
+
 > [root@cloudapp1 ipc]# tty
 > /dev/pts/6
-> open another terminal, then echo some string like operating file.
-> [root@cloudapp1 dev]# echo 'hello' > /dev/pts/6
-> in the former terminal, 
+
+open another terminal, then echo some string like operating file.
+> [root@cloudapp1 dev]# echo 'hello' > /dev/pts/6  
+
+in the former terminal,  
 > [root@cloudapp1 ipc]# hello
 
 2. proc virtual system to show kernel info
